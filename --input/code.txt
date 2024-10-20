@@ -1,0 +1,11 @@
+// This is a single-line comment
+/*
+This is a,
+multi-line comment
+*/
+myFunc(arg) {
+    x = 10; // Initialize x
+    if (x > 5) {
+        x += 1;
+    }
+}

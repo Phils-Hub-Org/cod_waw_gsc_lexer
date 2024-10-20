@@ -1,0 +1,101 @@
+/*========================================
+Token Type: <<COMMENTS>>
+========================================*/
+SL_COMMENT: For single-line comments.
+ML_COMMENT: For multi-line comments.
+DEV_COMMENT: For developer comments.
+
+/*========================================
+Token Type: NEWLINE
+========================================*/
+For newlines.
+
+/*========================================
+Token Type: <<DIRECTIVES>>
+========================================*/
+INCLUDE_DIRECTIVE: For the #include directive.
+ANIMTREE_DIRECTIVE: For the #animtree directive.
+USING_ANIMTREE_DIRECTIVE: For the #using_animtree directive.
+
+/*========================================
+Token Type: IDENTIFIER
+========================================*/
+For variable names, function names, etc.
+
+/*========================================
+Token Type: ESCAPE_CHAR
+========================================*/
+For paths.
+
+/*========================================
+Token Type: INT
+========================================*/
+For numerical integer values.
+
+/*========================================
+Token Type: FLOAT
+========================================*/
+For numerical float values.
+
+/*========================================
+Token Type: KEYWORD
+========================================*/
+For keywords.
+
+/*========================================
+Token Type: MISCELLANEOUS
+========================================*/
+FUNCTION_REFERENCE: For function references.
+
+POINTER_FUNCTION_LBRACES: For the opening-pointer function.
+POINTER_FUNCTION_RBRACES: For the closing-pointer function.
+
+STRING: For string literals.
+LOCAL_STRING: For localalized strings.
+
+/*========================================
+Token Type: PUNCTUATION
+========================================*/
+DOT: For periods.
+COMMA: For commas.
+QUOTE: For quotes.
+SEMICOLON: For semicolons.
+LPAREN: For the opening parenthesis.
+RPAREN: For the closing parenthesis.
+LBRACE: For the opening brace.
+RBRACE: For the closing brace.
+LBRACKET: For the opening bracket.
+RBRACKET: For the closing bracket.
+
+/*========================================
+Token Type: <<OPERATORS>>
+========================================*/
+ADD: For addition.
+SUB: For subtraction.
+MUL: For multiplication.
+DIV: For division.
+MOD: For modulus.
+
+ASSIGN: For assignment.
+EQ: For comparison.
+NEQ: For comparison.
+
+GT: For comparison.
+LT: For comparison.
+
+GE: For comparison.
+LE: For comparison.
+
+ADD_ASSIGN: For addition assignment.
+SUB_ASSIGN: For subtraction assignment.
+MUL_ASSIGN: For multiplication assignment.
+DIV_ASSIGN: For division assignment.
+
+AND: For logical and.
+NOT: For logical not.
+OR: For logical or.
+
+/*========================================
+Token Type: EOF
+========================================*/
+EOF: For the end of the file.
