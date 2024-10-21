@@ -11,6 +11,11 @@ Token Type: NEWLINE
 For newlines.
 
 /*========================================
+Token Type: ESCAPE_CHAR
+========================================*/
+For paths.
+
+/*========================================
 Token Type: <<DIRECTIVES>>
 ========================================*/
 INCLUDE_DIRECTIVE: For the #include directive.
@@ -21,11 +26,6 @@ USING_ANIMTREE_DIRECTIVE: For the #using_animtree directive.
 Token Type: IDENTIFIER
 ========================================*/
 For variable names, function names, etc.
-
-/*========================================
-Token Type: ESCAPE_CHAR
-========================================*/
-For paths.
 
 /*========================================
 Token Type: INT
@@ -73,8 +73,12 @@ Token Type: <<OPERATORS>>
 ADD: For addition.
 SUB: For subtraction.
 MUL: For multiplication.
+EXP: For exponentiation. // added for **
 DIV: For division.
 MOD: For modulus.
+
+INC: For increment.      // added for ++
+DEC: For decrement.      // added for --
 
 ASSIGN: For assignment.
 EQ: For comparison.

@@ -1,356 +1,188 @@
-"""
-Example GSC Code:
-// This is a single-line comment
-/*
-This is a,
-multi-line comment
-*/
-myFunc(arg) {
-    x = 10; // Initialize x
-    if (x > 5) {
-        x += 1;
+# Token Definitions
+tokens = [
+    ('SL_COMMENT', '//'),                                    # Single Line Comment
+    ('ML_COMMENT_START', '/*'),                             # Multi-line Comment start
+    ('ML_COMMENT_END', '*/'),                               # Multi-line Comment end
+    ('DEV_COMMENT', '#'),                                   # Developer Comment
+    ('NEWLINE', '\n'),                                     # Newline
+    ('ESCAPE_CHAR', '\\'),                                  # Escape character
+    ('INCLUDE_DIRECTIVE', '#include'),                      # #include directive
+    ('ANIMTREE_DIRECTIVE', '#animtree'),                    # #animtree directive
+    ('USING_ANIMTREE_DIRECTIVE', '#using_animtree'),        # #using_animtree directive
+    ('IDENTIFIER', 'IDENTIFIER'),                            # Identifiers
+    ('INT', 'INT'),                                        # Integer
+    ('FLOAT', 'FLOAT'),                                     # Floating point number
+    ('KEYWORD', 'if'),                                     # Keywords
+    ('FUNCTION_REFERENCE', '::'),                           # Function references
+    ('STRING', '"'),                                       # String literals
+    ('LOCAL_STRING', '&""'),                                # Localized strings
+    ('DOT', '.'),                                          # Period
+    ('COMMA', ','),                                        # Comma
+    ('QUOTE', '"'),                                       # Quote
+    ('SEMICOLON', ';'),                                   # Semicolon
+    ('LPAREN', '('),                                      # Opening parenthesis
+    ('RPAREN', ')'),                                      # Closing parenthesis
+    ('LBRACE', '{'),                                      # Opening brace
+    ('RBRACE', '}'),                                      # Closing brace
+    ('LBRACKET', '['),                                    # Opening bracket
+    ('RBRACKET', ']'),                                    # Closing bracket
+    ('ADD', '+'),                                         # Addition
+    ('SUB', '-'),                                          # Subtraction
+    ('MUL', '*'),                                         # Multiplication
+    ('DIV', '/'),                                          # Division
+    ('INC', '++'),                                       # Increment
+    ('DEC', '--'),                                       # Decrement
+    ('ASSIGN', '='),                                     # Assignment
+    ('EQ', '=='),                                        # Equality
+    ('NEQ', '!='),                                       # Inequality
+    ('GT', '>'),                                         # Greater than
+    ('LT', '<'),                                         # Less than
+    ('GE', '>='),                                        # Greater or equal
+    ('LE', '<='),                                        # Less or equal
+    ('AND', '&&'),                                       # Logical AND
+    ('NOT', '!'),                                        # Logical NOT
+    ('OR', '||'),                                        # Logical OR
+    ('EOF', '$'),                                        # End of file
+]
+
+# Ignored tokens (whitespace and comments)
+ignored_tokens = [' ', '\t', '\n']
+
+# Tokenizer Function with Line Numbers
+def tokenize(code):
+    position = 0
+    tokens_list = []
+    line_number = 1  # Start from line 1
+
+    while position < len(code):
+        char = code[position]
+
+        # Check for ignored tokens
+        if char in ignored_tokens:
+            if char == '\n':
+                line_number += 1
+            position += 1
+            continue
+
+        # Check for SL_COMMENT
+        if code.startswith('//', position):
+            end_pos = code.find('\n', position)
+            if end_pos == -1:  # If no newline, go to end of string
+                end_pos = len(code)
+            tokens_list.append(('SL_COMMENT', code[position:end_pos], line_number))
+            position = end_pos
+            continue
+
+        # Check for ML_COMMENT
+        if code.startswith('/*', position):
+            end_pos = code.find('*/', position)
+            if end_pos == -1:  # If no closing, go to end of string
+                end_pos = len(code)
+            tokens_list.append(('ML_COMMENT_START', code[position:end_pos], line_number))
+            position = end_pos + 2  # Skip past '*/'
+            continue
+
+        # Check for Developer Comment
+        if code.startswith('#', position):
+            end_pos = code.find('\n', position)
+            if end_pos == -1:
+                end_pos = len(code)
+            tokens_list.append(('DEV_COMMENT', code[position:end_pos], line_number))
+            position = end_pos
+            continue
+
+        # Check for INCLUDE_DIRECTIVE
+        if code.startswith('#include', position):
+            tokens_list.append(('INCLUDE_DIRECTIVE', '#include', line_number))
+            position += len('#include')
+            continue
+
+        # Check for ANIMTREE_DIRECTIVE
+        if code.startswith('#animtree', position):
+            tokens_list.append(('ANIMTREE_DIRECTIVE', '#animtree', line_number))
+            position += len('#animtree')
+            continue
+
+        # Check for IDENTIFIER or keywords
+        if char.isalpha() or char == '_':  # Starting character for identifier
+            start_pos = position
+            while position < len(code) and (code[position].isalnum() or code[position] == '_'):
+                position += 1
+            identifier = code[start_pos:position]
+            # Check for keywords
+            if identifier in ('self', 'true', 'false', 'undefined', 'if', 'else', 'while', 'for',
+                              'switch', 'case', 'break', 'continue', 'return', 'level', 'thread', 'wait'):
+                tokens_list.append(('KEYWORD', identifier, line_number))
+            else:
+                tokens_list.append(('IDENTIFIER', identifier, line_number))
+            continue
+
+        # Check for INT
+        if char.isdigit():
+            start_pos = position
+            while position < len(code) and code[position].isdigit():
+                position += 1
+            tokens_list.append(('INT', code[start_pos:position], line_number))
+            continue
+
+        # Check for FLOAT
+        if char.isdigit() and position + 1 < len(code) and code[position] == '.':
+            start_pos = position - 1
+            position += 1
+            while position < len(code) and code[position].isdigit():
+                position += 1
+            tokens_list.append(('FLOAT', code[start_pos:position], line_number))
+            continue
+
+        # Check for STRING
+        if char == '"':
+            start_pos = position
+            position += 1
+            while position < len(code) and code[position] != '"':
+                if code[position] == '\\':  # Escape character
+                    position += 1  # Skip escape character
+                position += 1
+            position += 1  # Skip closing quote
+            tokens_list.append(('STRING', code[start_pos:position], line_number))
+            continue
+
+        # Check for SEMICOLON, COMMA, etc.
+        simple_tokens = {
+            ';': 'SEMICOLON', ',': 'COMMA', '(': 'LPAREN', ')': 'RPAREN',
+            '{': 'LBRACE', '}': 'RBRACE', '[': 'LBRACKET', ']': 'RBRACKET',
+            '+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV', 
+            '=': 'ASSIGN', '==': 'EQ', '!=': 'NEQ', '>': 'GT',
+            '<': 'LT', '>=': 'GE', '<=': 'LE', '&&': 'AND',
+            '||': 'OR', '!': 'NOT', '++': 'INC', '--': 'DEC'
+        }
+        
+        if char in simple_tokens:
+            token_type = simple_tokens[char]
+            tokens_list.append((token_type, char, line_number))
+            position += 1
+            continue
+
+        # If the character doesn't match any known tokens, raise an error
+        raise SyntaxError(f'Unexpected character: {char} at line {line_number}')
+
+    tokens_list.append(('EOF', '$', line_number))  # End of file token
+    return tokens_list
+
+if __name__ == '__main__':
+    # Example usage
+    code = """
+    #include maps\\_utility;
+    myVar = 10;
+    myFunc(arg) {
+        // Single-line comment
+        /* Multi-line comment */
+        str = &"";
+        if (myVar == 10) {
+            myFunc = ::myFunc;
+        }
     }
-}
+    """
 
-Output:
-    Token Type          Token Value
-    ('COMMENT',         ' This is a single-line comment')    
-    ('NEWLINE',         '\n')
-    ('COMMENT',         '\nThis is a,\nmulti-line comment\n')
-    ('NEWLINE',         '\n')
-    ('IDENTIFIER',      'myFunc')
-    ('LPAREN',          '(')
-    ('IDENTIFIER',      'arg')
-    ('RPAREN',          ')')
-    ('LBRACE',          '{')
-    ('NEWLINE',         '\n')
-    ('IDENTIFIER',      'x')
-    ('ASSIGNMENT',      '=')
-    ('NUMBER',          '10')
-    ('SEMICOLON',       ';')
-    ('COMMENT',         ' Initialize x')
-    ('NEWLINE',         '\n')
-    ('IDENTIFIER',      'if')
-    ('LPAREN',          '(')
-    ('IDENTIFIER',      'x')
-    ('GREATER_THAN',    '>')
-    ('NUMBER',          '5')
-    ('RPAREN',          ')')
-    ('LBRACE',          '{')
-    ('NEWLINE',         '\n')
-    ('IDENTIFIER',      'x')
-    ('PLUS_EQUALS',     '+=')
-    ('NUMBER',          '1')
-    ('SEMICOLON',       ';')
-    ('NEWLINE',         '\n')
-    ('RBRACE',          '}')
-    ('NEWLINE',         '\n')
-    ('RBRACE',          '}')
-"""
-
-from Core.lexer import Lexer
-
-class GscLexer(Lexer):
-    
-    @classmethod
-    def tokenize(cls, code: str) -> list:
-        # Tokenize the GSC code
-        cls.setup(code)
-
-        while not cls.endOfInput():
-            cls.getNextToken()
-
-        cls.TOKENS.append(('EOF', None))
-        return cls.TOKENS
-    
-    @classmethod
-    def getNextToken(cls) -> None:
-        # Get the next token
-
-        # Spaces: Ignore
-        while cls.isCustomWhitespace(cls.currChar()):
-            cls.incrementPosition()
-        
-        # Newline
-        if cls.isCurrChar('\n'):
-            cls.TOKENS.append(('NEWLINE', cls.currChar()))
-            cls.incrementPosition()
-
-        # Single-line or multi-line comment | Divide equals | Divide
-        elif cls.isCurrChar('/'):
-            # Edge case where there is no next character
-            try:
-                next_char = cls.nextChar()
-            except IndexError:
-                return
-
-            # Single-line comment
-            if cls.isNextChar('/'):
-                # Move past '//'
-                cls.incrementPosition(2)
-                comment = ''
-                while not cls.endOfInput() and not cls.isCurrChar('\n'):
-                    comment += cls.currChar()
-                    cls.incrementPosition()
-                
-                cls.TOKENS.append(('COMMENT', comment))
-
-            # Multi-line comment
-            elif cls.isNextChar('*'):
-                # Move past '/*'
-                cls.incrementPosition(2)
-                comment = ''
-                
-                # Capture multi-line comment content
-                while not cls.endOfInput():
-                    if cls.isCurrChar('*') and cls.isNextChar('/'):
-                        # Move past '*/'
-                        cls.incrementPosition(2)
-                        break
-                    comment += cls.currChar()
-                    cls.incrementPosition()
-            
-                cls.TOKENS.append(('COMMENT', comment))
-            # Divide equals
-            elif cls.isNextChar('='):
-                cls.TOKENS.append(('DIVIDE_EQUALS', '/='))
-                cls.incrementPosition(2)
-            # Divide
-            else:
-                cls.TOKENS.append(('DIVIDE', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Identifier | Number
-        elif cls.currChar().isalpha() or cls.currChar().isdigit() or cls.isCurrChar('_'):
-            # Number
-            # if cls.currChar().isdigit():
-            #     number = ''
-            #     while not cls.endOfInput() and cls.currChar().isdigit():
-            #         number += cls.currChar()
-            #         cls.incrementPosition()
-                
-            #     cls.TOKENS.append(('NUMBER', number))
-            
-            # Identifier
-            identifier = ''
-            while not cls.endOfInput() and (cls.currChar().isalpha() or cls.currChar().isdigit() or cls.isCurrChar('_')):
-                identifier += cls.currChar()
-                cls.incrementPosition()
-            
-            cls.TOKENS.append(('IDENTIFIER', identifier))
-        
-        # Modulus
-        elif cls.isCurrChar('%'):
-            cls.TOKENS.append(('MODULUS', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Equals to | Assignment
-        elif cls.isCurrChar('='):
-            # Edge case where there is no next character
-            try:
-                # Equals to
-                if cls.isNextChar('='):
-                    cls.TOKENS.append(('EQUALS_TO', '=='))
-                    cls.incrementPosition(2)
-                else:
-                    # Assignment
-                    cls.TOKENS.append(('ASSIGNMENT', cls.currChar()))
-                    cls.incrementPosition()
-            except IndexError:
-                # Assignment
-                cls.TOKENS.append(('ASSIGNMENT', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Greater than or equal to | Greater than
-        elif cls.isCurrChar('>'):
-            # Greater than or equal to
-            if cls.isNextChar('='):
-                cls.TOKENS.append(('GREATER_THAN_OR_EQUAL_TO', '>='))
-                cls.incrementPosition(2)
-            # Greater than
-            else:
-                cls.TOKENS.append(('GREATER_THAN', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Less than or equal to
-        elif cls.isCurrChar('<'):
-            # Less than or equal to
-            if cls.isNextChar('='):
-                cls.TOKENS.append(('LESS_THAN_OR_EQUAL_TO', '<='))
-                cls.incrementPosition(2)
-            # Less than
-            else:
-                cls.TOKENS.append(('LESS_THAN_OR_EQUAL_TO', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Plus equals | Addition
-        elif cls.isCurrChar('+'):
-            # Plus equals
-            if cls.isNextChar('='):
-                cls.TOKENS.append(('PLUS_EQUALS', '+='))
-                cls.incrementPosition(2)
-            # Addition
-            else:
-                cls.TOKENS.append(('PLUS', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Subtract equals | Subtraction
-        elif cls.isCurrChar('-'):
-            # Subtract equals
-            if cls.isNextChar('='):
-                cls.TOKENS.append(('SUBTRACT_EQUALS', '-='))
-                cls.incrementPosition(2)
-            # Subtraction
-            else:
-                cls.TOKENS.append(('SUBTRACT', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Multiply equals | Multiplication
-        elif cls.isCurrChar('*'):
-            # Multiply equals
-            if cls.isNextChar('='):
-                cls.TOKENS.append(('MULTIPLY_EQUALS', '*='))
-                cls.incrementPosition(2)
-            # Multiplication
-            else:
-                cls.TOKENS.append(('MULTIPLY', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Keyword
-        elif cls.currChar() in {'if', 'else', 'while', 'for', 'switch', 'case', 'break', 'continue', 'return', 'true', 'false', 'undefined', 'include', 'level', 'self', 'thread'}:
-            cls.TOKENS.append(('KEYWORD', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Semicolon
-        elif cls.isCurrChar(';'):
-            cls.TOKENS.append(('SEMICOLON', cls.currChar()))
-            cls.incrementPosition()
-        
-        # LParen
-        elif cls.isCurrChar('('):
-            cls.TOKENS.append(('LPAREN', cls.currChar()))
-            cls.incrementPosition()
-        
-        # RParen
-        elif cls.isCurrChar(')'):
-            cls.TOKENS.append(('RPAREN', cls.currChar()))
-            cls.incrementPosition()
-        
-        # LBrace
-        elif cls.isCurrChar('{'):
-            cls.TOKENS.append(('LBRACE', cls.currChar()))
-            cls.incrementPosition()
-        
-        # RBrace
-        elif cls.isCurrChar('}'):
-            cls.TOKENS.append(('RBRACE', cls.currChar()))
-            cls.incrementPosition()
-        
-        # LBracket
-        elif cls.isCurrChar('['):
-            cls.TOKENS.append(('LBRACKET', cls.currChar()))
-            cls.incrementPosition()
-        
-        # RBracket
-        elif cls.isCurrChar(']'):
-            cls.TOKENS.append(('RBRACKET', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Quote
-        elif cls.isCurrChar('"'):
-            cls.TOKENS.append(('QUOTE', cls.currChar()))
-
-            # Move past opening quote
-            cls.incrementPosition()
-
-            # String
-            string = ''
-            while not cls.endOfInput() and not cls.isCurrChar('"'):
-                string += cls.currChar()
-                cls.incrementPosition()
-            
-            cls.TOKENS.append(('STRING', string))
-
-            cls.TOKENS.append(('QUOTE', cls.currChar()))
-
-            # Move past closing quote
-            cls.incrementPosition()
-        
-        # Double Colon | Single Colon
-        elif cls.isCurrChar(':'):
-            # Double Colon
-            if cls.isNextChar(':'):
-                cls.TOKENS.append(('DOUBLE_COLON', cls.currChar() + cls.nextChar()))
-                cls.incrementPosition(2)
-            # Single Colon
-            else:
-                cls.TOKENS.append(('SINGLE_COLON', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Preprocessor Directive
-        elif cls.isCurrChar('#'):
-            line = ''
-            while not cls.endOfInput() and not cls.currChar().isspace():
-                line += cls.currChar()
-                cls.incrementPosition()
-            
-            cls.TOKENS.append(('PREPROCESSOR_DIRECTIVE', line))
-        
-        # Dot
-        elif cls.isCurrChar('.'):
-            cls.TOKENS.append(('DOT', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Comma
-        elif cls.isCurrChar(','):
-            cls.TOKENS.append(('COMMA', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Local String | Logical And
-        elif cls.isCurrChar('&'):
-            # Logical And
-            if cls.isNextChar('&'):
-                cls.TOKENS.append(('LOGICAL_AND', cls.currChar() + cls.nextChar()))
-                cls.incrementPosition(2)
-            # Local String
-            else:
-                cls.TOKENS.append(('LOCAL_STRING', cls.currChar()))
-                cls.incrementPosition()
-        
-        # Logical Or
-        elif cls.isCurrChar('|') and cls.isNextChar('|'):
-            cls.TOKENS.append(('LOGICAL_OR', cls.currChar() + cls.nextChar()))
-            cls.incrementPosition(2)
-        
-        # Logical Not
-        elif cls.isCurrChar('!'):
-            cls.TOKENS.append(('LOGICAL_NOT', cls.currChar()))
-            cls.incrementPosition()
-        
-        # Path Separator
-        elif cls.isCurrChar('\\'):
-            cls.TOKENS.append(('PATH_SEPARATOR', cls.currChar()))
-            cls.incrementPosition()
-        
-        # End of input
-        elif cls.endOfInput():
-            print('End of input reached')
-            cls.TOKENS.append(('END', 'EOF'))
-            return
-        
-        # Unrecognized character
-        else:
-            cls.unrecognizedCharacter()
-    
-    @classmethod
-    def unrecognizedCharacter(cls):
-        if not cls.endOfInput():
-            # print(f'Unrecognized character: {cls.currChar()}, Pos: {cls.currPos()}')
-            print(f"""/*========================================
-Unrecognized character: '{cls.currChar()}'
-Char Position: {cls.currPos()}
-Line Number: {cls.getLineNumber()}
-========================================*/""")
-
-            cls.TOKENS.append(('UNKNOWN', cls.currChar()))
-            cls.incrementPosition()
+    tokens_list = tokenize(code)
+    for token in tokens_list:
+        print(token)
